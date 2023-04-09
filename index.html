@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SaladKing_GPT</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        var lastUpdateId = 0;
+        var token = "6270326625:AAHbHiYADCqs7kkT9gZcSuxk1CTtK8Fznq8"; // Replace with your Telegram bot token
+        var openaiApiKey = "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"; // Replace with your OpenAI API key
+        var deploymentId = window.location.href;
+        /*
+        Step to run this:
+            1. First deploy as webapp
+            2. Get deploy id and set go getWebhookUrl
+            3. Select main at top bar and execute
+        */
+
+        // use webhook to get the bot real-time reply
+        function main() {
+            var url = "https://api.telegram.org/bot" + token + "/setWebhook?url=" + window.location.href;
+            // var response = UrlFetchApp.fetch(url);
+
+            $.ajax({
+                url: url,
+                method: 'post',
+                success: function (response) {
+                    console.log(response.getContentText());
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log(textStatus, errorThrown);
+                }
+            });
+        }
+
+        function getWebhookUrl() {
+            //use deploy id
+            var url = deploymentId;
+            return url;
+        }
+
+        // doPost is default function for webhook
+        function doPost(e) {
+            var contents = JSON.parse(e.postData.contents);
+            var updateId = contents.update_id;
+
+            if (updateId > lastUpdateId) {
+                lastUpdateId = updateId;
+                var chatId = contents.message.chat.id;
+                var text = contents.message.text;
+                handleMessage(chatId, text);
+            }
+        }
+
+        function sendMessage(chatId, message) {
+            try {
+                var url = "https://api.telegram.org/bot" + token + "/sendMessage";
+                var payload = {
+                    "chat_id": chatId,
+                    "text": message
+                };
+                var options = {
+                    "method": "post",
+                    "contentType": "application/json",
+                    "payload": JSON.stringify(payload)
+                };
+                $.ajax({
+                    url: url,
+                    method: 'post',
+                    data: payload,
+                    success: function (response) {
+                        // $('#result').text(JSON.stringify(response));
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(textStatus, errorThrown);
+                    }
+                });
+                // UrlFetchApp.fetch(url, options);
+            } catch (e) {
+                console.log("Error sending message: " + e);
+            }
+        }
+
+        function handleMessage(chatId, text) {
+            // Process user message and generate response using ChatGPT
+            var response = generateResponse(chatId, text);
+
+            // Send response back to user
+            sendMessage(chatId, response);
+        }
+        var conversationHistory = {};
+        async function generateResponse(chatId, message) {
+            var prompt = conversationHistory[chatId] || "";
+            prompt += "\nUser: " + message + "\nChatbot:";
+            console.log(prompt);
+
+            var model = "text-davinci-002"; // Use the Davinci model for best results
+            var apiEndpoint = "https://api.openai.com/v1/engines/" + model + "/completions";
+            var headers = {
+                "Authorization": "Bearer " + openaiApiKey,
+                "Content-Type": "application/json"
+            };
+            var data = {
+                "prompt": prompt,
+                "max_tokens": 4060, // Change this to control the length of the generated response
+                "temperature": 0.1 // Change this to control the creativity of the generated response
+            };
+            var options = {
+                "method": "post",
+                "headers": headers,
+                "payload": JSON.stringify(data)
+            };
+
+            $.ajax({
+                url: url,
+                method: 'post',
+                data: payload,
+                success: function (response) {
+                    // $('#result').text(JSON.stringify(response));
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log(textStatus, errorThrown);
+                }
+            });
+            const response = await fetch(url, { method: 'POST', headers });
+            var data = JSON.parse(response.getContentText());
+            var generatedText = data.choices[0].text.trim();
+            console.log(generatedText);
+            return generatedText;
+        }
+        main();
+    </script>
+</head>
+
+<body>
+    <h1>Welcome to my page!</h1>
+    <p>This is a SaladKing_GPT API page</p>
+</body>
+
+</html>
