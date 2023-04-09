@@ -43,7 +43,7 @@
         function doPost(e) {
             var contents = JSON.parse(e.postData.contents);
             var updateId = contents.update_id;
-
+            console.log('jump to do post');
             if (updateId > lastUpdateId) {
                 lastUpdateId = updateId;
                 var chatId = contents.message.chat.id;
